@@ -5,6 +5,6 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { analyzeUrl } = require('../controllers/analyzeController');
 
 // ✅ ONLY THIS
-router.post('/analyze', asyncHandler(analyzeUrl));
+router.post('/', asyncHandler(analyzeUrl));
 
 module.exports = router;

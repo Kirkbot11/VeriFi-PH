@@ -60,7 +60,7 @@ app.get('/test', (req, res) => {
  * API ROUTES
  * -------------------------
  */
-app.use('/api/v1', rateLimiter, analyzeRouter);
+app.use('/api/v1/analyze', rateLimiter, analyzeRouter);
 
 /**
  * -------------------------
