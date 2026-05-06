@@ -2,28 +2,40 @@ const axios = require('axios');
 
 /**
  * -------------------------
- * CLOUDLFARE AI CORE
+ * CLOUDLFARE AI CORE (FIXED)
  * -------------------------
  */
 async function callCloudflareModel(model, input) {
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/run/${model}`;
 
-  const response = await axios.post(
-    endpoint,
-    {
-      prompt: input
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      timeout: 20000
-    }
-  );
+  try {
+    const response = await axios.post(
+      endpoint,
+      { prompt: input },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        timeout: 20000
+      }
+    );
 
-  return response.data?.result?.response || "";
-}
+    const result = response.data?.result;
+
+    // 🔥 FIX: handle all possible Cloudflare formats
+    return (
+      result?.response ||
+      result?.output ||
+      result?.result ||
+      JSON.stringify(result || "")
+    );
+
+  } catch (err) {
+    console.error("Cloudflare AI error:", err.message);
+    return "";
+  }
+} 
 
 /**
  * -------------------------
@@ -50,16 +62,20 @@ function normalizeProbability(raw) {
  * -------------------------
  */
 function interpretAiDetection(output) {
-  const normalized = (output || '').toLowerCase();
+  const normalized = String(output || "").toLowerCase();
 
-  if (normalized.includes('ai')) {
+  // stronger detection rules
+  const aiSignals = ["ai-generated", "artificial", "machine", "llm"];
+  const humanSignals = ["human-written", "human", "authentic"];
+
+  if (aiSignals.some(w => normalized.includes(w))) {
     return {
       is_ai: true,
-      confidence: normalizeProbability(output) || 70,
+      confidence: Math.max(normalizeProbability(output), 70),
     };
   }
 
-  if (normalized.includes('human')) {
+  if (humanSignals.some(w => normalized.includes(w))) {
     return {
       is_ai: false,
       confidence: 100 - (normalizeProbability(output) || 20),
@@ -108,13 +124,18 @@ ${text}
       prompt
     );
 
-    let parsed;
+ let parsed = null;
 
-    try {
-      parsed = JSON.parse(output);
-    } catch (e) {
-      parsed = null;
-    }
+try {
+  const cleaned = output
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  parsed = JSON.parse(cleaned);
+} catch (e) {
+  parsed = null;
+}
 
     if (parsed && typeof parsed === 'object') {
       return {
