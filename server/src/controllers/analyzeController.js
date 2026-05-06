@@ -153,10 +153,14 @@ async function analyzeUrl(req, res) {
      * LEGAL ENGINE (NOW SAFE)
      * -------------------------
      */
-    const legalInsights = await legalEngine.matchLaws(
-      `${content.title} ${content.excerpt} ${content.text}`,
-      score
-    );
+   let legalInsights = [];
+
+if (score >= 30) {
+  legalInsights = await legalEngine.matchLaws(
+    `${content.title} ${content.excerpt} ${content.text}`,
+    score
+  );
+}
 
   const safeScore = typeof score === "number" ? score : 0;
 
