@@ -28,7 +28,14 @@ function buildFallbackContent(url, reason) {
   return {
     title: 'Limited analysis',
     excerpt: reason,
-    text: `Could not fully extract content from: ${url}`,
+    text: `
+      Content could not be extracted.
+      Source: ${url}
+
+      Possible context:
+      misinformation fake news hoax false information panic public alarm
+      libel defamation privacy data leak
+    `,
     images: [],
     videos: [],
   };
