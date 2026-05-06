@@ -175,12 +175,15 @@ async function analyzeUrl(req, res) {
      * LEGAL ENGINE (NOW SAFE)
      * -------------------------
      */
-   let legalInsights = [];
+ let legalInsights = [];
 
-if (score >= 30) {
+const combinedInput = `${url} ${content.title} ${content.excerpt} ${content.text}`;
+
+if (score >= 30 && content.text?.length > 50) {
   legalInsights = await legalEngine.matchLaws(
-    `${content.title} ${content.excerpt} ${content.text}`,
-    score
+    combinedInput,
+    score,
+    url
   );
 }
 
@@ -195,10 +198,10 @@ const legalRiskLevel =
         : legalInsights.some(l => (l.risk_level || "").includes("medium"))
         ? "medium"
         : "low")
-    : score < 40
-    ? "critical"
+  : score < 40
+  ? "high"
     : score < 60
-    ? "high"
+    ? "medium"
     : score < 80
     ? "medium"
     : "low";
@@ -253,14 +256,10 @@ const legalRiskLevel =
      * FALLBACK LEGAL NORMALIZER
      * -------------------------
      */
-    const normalizedLegalInsights =
-      Array.isArray(legalInsights) && legalInsights.length > 0
-        ? legalInsights
-        : [{
-            law: "No applicable Philippine law detected",
-            explanation: "No matching keywords found in content analysis.",
-            risk_level: "low"
-          }];
+  const normalizedLegalInsights =
+  Array.isArray(legalInsights) && legalInsights.length > 0
+    ? legalInsights
+    : [];
 
     if (forcedLegalRisk) {
       normalizedLegalInsights.unshift(forcedLegalRisk);
