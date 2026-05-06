@@ -96,8 +96,7 @@ function App() {
 
   useEffect(() => {
     const backendUrl =
-      import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-
+  import.meta.env.VITE_BACKEND_URL || 'https://verifi-ph.onrender.com';
     socketRef.current = io(backendUrl);
 
     socketRef.current.on('connect', () => {
@@ -120,8 +119,8 @@ function App() {
   }, []);
 
   const verifyPostLink = async (url) => {
-    const backendUrl =
-      import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || 'https://verifi-ph.onrender.com';
 
     setIsVerifying(true);
 
@@ -153,10 +152,12 @@ function App() {
       const isNetworkError =
         err instanceof TypeError && /failed to fetch/i.test(err.message || '');
 
-      const message = isNetworkError
-        ? 'Cannot reach verifier backend at http://localhost:3000. Start it with: npm run dev'
-        : err?.message || 'Unable to verify this link right now.';
+     const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || 'https://verifi-ph.onrender.com';
 
+const message = isNetworkError
+  ? `Cannot reach verifier backend at ${backendUrl}`
+  : err?.message || 'Unable to verify this link right now.';
       setStatusText(message);
       return { ok: false, error: message };
     } finally {

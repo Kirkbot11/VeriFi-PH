@@ -267,7 +267,6 @@ function isInvalidUrl(url) {
     u.includes("fake") ||
     u.includes("test") ||
     u.includes("localhost") ||
-    u.includes("example.com") ||
     u.includes("unknown") ||
     u.includes("127.0.0.1") ||
     u.includes("0.0.0.0")

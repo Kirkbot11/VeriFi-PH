@@ -1,41 +1,35 @@
-const axios = require('axios');
-
-/**
- * -------------------------
- * CLOUDLFARE AI CORE (FIXED)
- * -------------------------
- */
 async function callCloudflareModel(model, input) {
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/run/${model}`;
 
-  try {
-    const response = await axios.post(
-      endpoint,
-      { prompt: input },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        timeout: 20000
-      }
-    );
+  const response = await axios.post(
+    endpoint,
+    {
+      messages: [
+        {
+          role: "user",
+          content: input
+        }
+      ]
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 20000,
+    }
+  );
 
-    const result = response.data?.result;
+  const result = response.data?.result;
 
-    // 🔥 FIX: handle all possible Cloudflare formats
-    return (
-      result?.response ||
-      result?.output ||
-      result?.result ||
-      JSON.stringify(result || "")
-    );
-
-  } catch (err) {
-    console.error("Cloudflare AI error:", err.message);
-    return "";
-  }
-} 
+  return (
+    result?.response ||
+    result?.output ||
+    result?.content ||
+    result ||
+    ""
+  );
+}
 
 /**
  * -------------------------
@@ -123,11 +117,10 @@ ${text}
       '@cf/meta/llama-3-8b-instruct',
       prompt
     );
-
- let parsed = null;
+let parsed = null;
 
 try {
-  const cleaned = output
+  const cleaned = String(output)
     .replace(/```json/g, "")
     .replace(/```/g, "")
     .trim();
