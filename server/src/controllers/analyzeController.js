@@ -256,10 +256,31 @@ const legalRiskLevel =
      * FALLBACK LEGAL NORMALIZER
      * -------------------------
      */
-  const normalizedLegalInsights =
+  
+ let normalizedLegalInsights =
   Array.isArray(legalInsights) && legalInsights.length > 0
     ? legalInsights
     : [];
+
+/**
+ * 🔥 NEW: SCORE-BASED FALLBACK (NOT KEYWORD BASED)
+ */
+if (normalizedLegalInsights.length === 0 && score < 40) {
+  const laws = require('../data/ph_laws.json');
+
+  // pick HIGH risk laws for critical content
+  const fallbackLaw =
+    laws.find(l => l.risk_level === "high") ||
+    laws[0];
+
+  normalizedLegalInsights = [
+    {
+      law: fallbackLaw.law,
+      explanation: fallbackLaw.explanation,
+      risk_level: fallbackLaw.risk_level
+    }
+  ];
+}
 
     if (forcedLegalRisk) {
       normalizedLegalInsights.unshift(forcedLegalRisk);
