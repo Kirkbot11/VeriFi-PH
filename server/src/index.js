@@ -118,8 +118,9 @@ io.on('connection', (socket) => {
  * START SERVER (IMPORTANT FIX)
  * -------------------------
  */
-server.listen(port, () => {
-  console.log(
-    `🚀 Fake-News-Shield backend running on port ${port} in ${nodeEnv} mode`
-  );
+const PORT = process.env.PORT || port || 3000;
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
+  
