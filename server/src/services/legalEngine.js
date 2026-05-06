@@ -2,11 +2,12 @@ const laws = require('../data/ph_laws.json');
 
 /**
  * -------------------------
- * SAFE LAW MATCHING ENGINE
+ * SAFE LAW MATCHING ENGINE (REVISED)
  * -------------------------
  * - No forced fallback laws
  * - Score-aware filtering
- * - Reduced false positives
+ * - Prevents false triggers on low-quality content
+ * - Clean PH law matching only
  */
 
 function matchLaws(text = "", credibilityScore = 100) {
@@ -15,12 +16,26 @@ function matchLaws(text = "", credibilityScore = 100) {
   const normalized = text.toLowerCase();
 
   /**
-   * ❌ BLOCK LOW-CREDIBILITY CONTENT FROM TRIGGERING LAWS
-   * This fixes your SIM law issue at 0%
+   * ❌ HARD GUARD:
+   * If content is extremely low credibility,
+   * DO NOT apply legal interpretation (prevents noise like SIM law)
    */
   if (credibilityScore < 20) {
     return [];
   }
+
+  /**
+   * -------------------------
+   * SCORE-AWARE LAW FILTERING
+   * -------------------------
+   * Only allow stronger laws if credibility is low but not zero
+   */
+  const allowedRiskLevels =
+    credibilityScore < 40
+      ? ["high", "medium"]
+      : credibilityScore < 70
+      ? ["medium", "low"]
+      : ["low", "medium", "high"];
 
   const scoredLaws = laws.map((law) => {
     const keywords = Array.isArray(law.keywords) ? law.keywords : [];
@@ -38,8 +53,16 @@ function matchLaws(text = "", credibilityScore = 100) {
     };
   });
 
+  /**
+   * -------------------------
+   * FILTER VALID MATCHES
+   * -------------------------
+   */
   const sortedMatches = scoredLaws
-    .filter((l) => l.matchCount > 0)
+    .filter((l) =>
+      l.matchCount > 0 &&
+      allowedRiskLevels.includes(l.risk_level)
+    )
     .sort((a, b) => b.matchCount - a.matchCount)
     .slice(0, 3)
     .map(({ law, explanation, risk_level }) => ({
@@ -49,8 +72,8 @@ function matchLaws(text = "", credibilityScore = 100) {
     }));
 
   /**
-   * ✅ IMPORTANT FIX:
-   * NO MORE FAKE FALLBACK LAW
+   * ❌ NO FALLBACK LAW
+   * (prevents fake legal warnings like SIM Registration Act on clean URLs)
    */
   if (sortedMatches.length === 0) {
     return [];
