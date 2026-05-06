@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
 const compression = require('compression');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,13 +37,22 @@ app.use((req, res, next) => {
  * HEALTH CHECK
  * -------------------------
  */
-app.get('/health', async (req, res) => {
-  return res.status(200).json({
+app.get('/health', (req, res) => {
+  res.status(200).json({
     status: 'ok',
     uptime_seconds: Number(process.uptime().toFixed(2)),
     environment: nodeEnv,
     timestamp: new Date().toISOString(),
   });
+});
+
+/**
+ * -------------------------
+ * TEST ROUTE (FOR DEBUGGING)
+ * -------------------------
+ */
+app.get('/test', (req, res) => {
+  res.json({ ok: true });
 });
 
 /**
@@ -56,14 +64,14 @@ app.use('/api/v1', rateLimiter, analyzeRouter);
 
 /**
  * -------------------------
- * 404 HANDLER
+ * 404 HANDLER (FIXED)
  * -------------------------
  */
-app.use((req, res, next) => {
-  const notFoundError = new Error('Route not found');
-  notFoundError.status = 404;
-  notFoundError.code = 'NOT_FOUND';
-  return next(notFoundError);
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    code: 'NOT_FOUND'
+  });
 });
 
 /**
@@ -75,7 +83,7 @@ app.use(errorHandler);
 
 /**
  * -------------------------
- * SOCKET.IO SETUP (FIX)
+ * SOCKET.IO SETUP
  * -------------------------
  */
 const server = http.createServer(app);
@@ -87,25 +95,15 @@ const io = new Server(server, {
     credentials: true
   }
 });
+
 io.on('connection', (socket) => {
   console.log(`🟢 Client connected: ${socket.id}`);
 
-  /**
-   * FRONTEND SENDS DATA HERE
-   */
   socket.on('analyze', (data) => {
-    try {
-      // just echo back OR you can trigger backend logic here
-      socket.emit('analysis-result', {
-        success: true,
-        data
-      });
-    } catch (err) {
-      socket.emit('analysis-result', {
-        success: false,
-        error: err.message
-      });
-    }
+    socket.emit('analysis-result', {
+      success: true,
+      data
+    });
   });
 
   socket.on('disconnect', () => {
@@ -115,14 +113,11 @@ io.on('connection', (socket) => {
 
 /**
  * -------------------------
- * START SERVER (IMPORTANT FIX)
+ * START SERVER
  * -------------------------
  */
 const PORT = process.env.PORT || port || 3000;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
-  app.post('/test', (req, res) => {
-  res.json({ ok: true });
 });
