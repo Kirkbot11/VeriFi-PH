@@ -38,10 +38,32 @@ async function analyzeUrl(req, res) {
   try {
     const { url } = req.body || {};
 
-    if (!url || !isValidUrl(url)) {
-      return res.status(400).json({ error: 'Invalid URL' });
-    }
-
+   if (!url || typeof url !== "string" || url.trim().length === 0) {
+  return res.json({
+    url: url || "",
+    credibility_score: 0,
+    credibility_label: "No credibility",
+    verdict: "Invalid / Empty Source",
+    ai_detection: {
+      overall_probability: 0,
+      text: { is_ai: false, confidence: 0 }
+    },
+    sentiment: { label: "NEUTRAL", score: 0.5 },
+    fact_check: {
+      verdict: "No URL provided",
+      sources: []
+    },
+    legal_insights: [],
+    legal_risk_level: "low",
+    required_action: {
+      level: "critical",
+      message: "No URL provided.",
+      actions: ["Provide a valid link"]
+    },
+    explanation: "No input URL was provided for analysis.",
+    fetch_warning: null
+  });
+}
     const cacheKey = getCacheKey(url);
     const cached = cacheService.get(cacheKey);
     if (cached) return res.json({ ...cached, cache_hit: true });
