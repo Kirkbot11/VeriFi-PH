@@ -1,53 +1,18 @@
 const laws = require('../data/ph_laws.json');
 
-/**
- * -------------------------
- * SAFE LAW MATCHING ENGINE (REVISED)
- * -------------------------
- * - No forced fallback laws
- * - Score-aware filtering
- * - Prevents false triggers on low-quality content
- * - Clean PH law matching only
- */
+function matchLaws(text = "", credibilityScore = 100, url = "") {
+  if (!text && !url) return [];
 
-function matchLaws(text = "", credibilityScore = 100) {
-  if (!text || typeof text !== "string") return [];
-
-  const normalized = text.toLowerCase();
-
-  /**
-   * ❌ HARD GUARD:
-   * If content is extremely low credibility,
-   * DO NOT apply legal interpretation (prevents noise like SIM law)
-   */
-  if (credibilityScore < 20) {
-    return [];
-  }
-
-  /**
-   * 🔥 NEW RULE:
-   * If credibility is low (<40), allow broader law triggering
-   */
-  const lowCredibilityMode = credibilityScore < 40;
-
-  /**
-   * -------------------------
-   * SCORE-AWARE LAW FILTERING
-   * -------------------------
-   */
-  const allowedRiskLevels =
-    credibilityScore < 40
-      ? ["high", "medium"]
-      : credibilityScore < 70
-      ? ["medium", "low"]
-      : ["low", "medium", "high"];
+  const normalizedText = (text || "").toLowerCase();
+  const normalizedUrl = (url || "").toLowerCase();
+  const combined = `${normalizedText} ${normalizedUrl}`;
 
   const scoredLaws = laws.map((law) => {
     const keywords = Array.isArray(law.keywords) ? law.keywords : [];
 
     const keywordMatches = keywords.filter((keyword) => {
       if (!keyword) return false;
-      return normalized.includes(keyword.toLowerCase());
+      return combined.includes(keyword.toLowerCase());
     });
 
     return {
@@ -58,18 +23,8 @@ function matchLaws(text = "", credibilityScore = 100) {
     };
   });
 
-  /**
-   * -------------------------
-   * FILTER VALID MATCHES
-   * -------------------------
-   */
   const sortedMatches = scoredLaws
-    .filter((l) =>
-      (
-        l.matchCount > 0 || lowCredibilityMode
-      ) &&
-      allowedRiskLevels.includes(l.risk_level)
-    )
+    .filter((l) => l.matchCount > 0)
     .sort((a, b) => b.matchCount - a.matchCount)
     .slice(0, 3)
     .map(({ law, explanation, risk_level }) => ({
@@ -79,15 +34,28 @@ function matchLaws(text = "", credibilityScore = 100) {
     }));
 
   /**
-   * ❌ NO FALLBACK LAW
+   * 🔥 IMPORTANT FIX:
+   * If HIGH or CRITICAL risk → allow weak URL-based trigger
    */
-  if (sortedMatches.length === 0) {
-    return [];
+  if (sortedMatches.length === 0 && credibilityScore < 60) {
+    const urlSignals = combined;
+
+    const fallback = laws.find((law) =>
+      law.keywords.some((k) => urlSignals.includes(k.toLowerCase()))
+    );
+
+    if (fallback) {
+      return [
+        {
+          law: fallback.law,
+          explanation: fallback.explanation,
+          risk_level: fallback.risk_level
+        }
+      ];
+    }
   }
 
   return sortedMatches;
 }
 
-module.exports = {
-  matchLaws,
-};
+module.exports = { matchLaws };
