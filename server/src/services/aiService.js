@@ -47,23 +47,23 @@ async function callCloudflareModel(model, input, parameters = {}) {
     throw new Error('AI_SERVICE_UNAVAILABLE');
   }
 
-  const endpoint = `${baseUrl}/text/generate`;
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run/${model}`;
 
-  const payload = {
-    model,
-    input,
-    ...parameters,
-  };
-
-  const response = await axios.post(endpoint, payload, {
-    headers: {
-      Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-      'Content-Type': 'application/json',
+  const response = await axios.post(
+    endpoint,
+    {
+      prompt: input
     },
-    timeout: 20000,
-  });
+    {
+      headers: {
+        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 20000,
+    }
+  );
 
-  return parseCloudflareOutput(response.data?.result || response.data);
+  return response.data?.result?.response || response.data?.result || '';
 }
 
 function normalizeProbability(raw) {
