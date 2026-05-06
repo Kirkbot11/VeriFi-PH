@@ -6,28 +6,23 @@ const axios = require('axios');
  * -------------------------
  */
 async function callCloudflareModel(model, input) {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const token = process.env.CLOUDFLARE_API_TOKEN;
-
-  if (!accountId || !token) {
-    throw new Error('CLOUDFLARE_MISSING_ENV');
-  }
-
-  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/run/${model}`;
 
   const response = await axios.post(
     endpoint,
-    { prompt: input },
+    {
+      prompt: input
+    },
     {
       headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json"
       },
-      timeout: 20000,
+      timeout: 20000
     }
   );
 
-  return response.data?.result?.response || '';
+  return response.data?.result?.response || "";
 }
 
 /**
@@ -51,20 +46,20 @@ function normalizeProbability(raw) {
 
 /**
  * -------------------------
- * AI DETECTION
+ * AI DETECTION (IMPROVED)
  * -------------------------
  */
 function interpretAiDetection(output) {
   const normalized = (output || '').toLowerCase();
 
-  if (normalized.includes('ai-generated') || normalized.includes('likely ai')) {
+  if (normalized.includes('ai')) {
     return {
       is_ai: true,
-      confidence: normalizeProbability(output) || 75,
+      confidence: normalizeProbability(output) || 70,
     };
   }
 
-  if (normalized.includes('human') || normalized.includes('likely human')) {
+  if (normalized.includes('human')) {
     return {
       is_ai: false,
       confidence: 100 - (normalizeProbability(output) || 20),
@@ -89,9 +84,20 @@ async function detectAIText(text) {
 
   try {
     const prompt = `
-Analyze this text and determine:
-1. Is it AI-generated?
-2. Confidence (0-100%)
+You are an AI detection classifier.
+
+Return ONLY valid JSON. No explanations. No extra text.
+
+Format:
+{
+  "is_ai": true or false,
+  "confidence": number from 0 to 100
+}
+
+Rules:
+- Output must be valid JSON
+- Do not include any text outside JSON
+- Be strict and consistent
 
 Text:
 ${text}
@@ -102,12 +108,32 @@ ${text}
       prompt
     );
 
-    const interpreted = interpretAiDetection(output);
+    let parsed;
+
+    try {
+      parsed = JSON.parse(output);
+    } catch (e) {
+      parsed = null;
+    }
+
+    if (parsed && typeof parsed === 'object') {
+      return {
+        overall_probability: parsed.confidence ?? 0,
+        text: {
+          is_ai: parsed.is_ai ?? false,
+          confidence: parsed.confidence ?? 0,
+        },
+      };
+    }
+
+    // fallback if model fails JSON format
+    const fallbackConfidence = normalizeProbability(output);
 
     return {
-      overall_probability: interpreted.confidence,
-      text: interpreted,
+      overall_probability: fallbackConfidence,
+      text: interpretAiDetection(output),
     };
+
   } catch (error) {
     return {
       overall_probability: 0,
@@ -116,10 +142,9 @@ ${text}
     };
   }
 }
-
 /**
  * -------------------------
- * SENTIMENT ANALYSIS
+ * SENTIMENT ANALYSIS (FIXED - NO MORE FAILING MODEL)
  * -------------------------
  */
 function interpretSentiment(output) {
@@ -137,11 +162,9 @@ function interpretSentiment(output) {
     return { label: 'NEUTRAL', score: 0.55 };
   }
 
-  const probability = normalizeProbability(output) / 100;
-
   return {
     label: 'UNKNOWN',
-    score: probability || 0.5,
+    score: 0.5,
   };
 }
 
@@ -151,9 +174,17 @@ async function getSentiment(text) {
   }
 
   try {
+    const prompt = `
+Classify sentiment as ONLY:
+positive, negative, or neutral
+
+Text:
+${text}
+`;
+
     const output = await callCloudflareModel(
-      '@cf/huggingface/distilbert-sst-2-int8',
-      text
+      '@cf/meta/llama-3-8b-instruct',
+      prompt
     );
 
     return interpretSentiment(output);
@@ -168,7 +199,7 @@ async function getSentiment(text) {
 
 /**
  * -------------------------
- * RISK CLASSIFICATION
+ * RISK CLASSIFICATION (CLEANED)
  * -------------------------
  */
 async function classifyRisk(text, candidateLabels = []) {
@@ -177,7 +208,9 @@ async function classifyRisk(text, candidateLabels = []) {
   }
 
   const prompt = `
-Classify the text into one of these categories:
+Classify this text into ONE category ONLY:
+
+Options:
 ${candidateLabels.join(', ')}
 
 Return ONLY the category name.

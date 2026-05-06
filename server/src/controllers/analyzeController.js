@@ -115,7 +115,7 @@ async function analyzeUrl(req, res) {
       await mediaAIDetector.detectAIGeneratedContent({
         sourceUrl: url,
         content,
-        aiTextProbability: aiDetection.overall_probability,
+        aiTextProbability: Number(aiDetection?.overall_probability || 0)
       });
 
     /**
@@ -125,7 +125,7 @@ async function analyzeUrl(req, res) {
      */
     const credibility = credibilityScorer.computeScore({
       aiProbability: multimodalAiDetection.overall_probability,
-      factCheckVerdict: factCheck?.sources?.[0]?.verdict || 'unknown',
+    factCheckVerdict: factCheck?.verdict || 'unknown',
       sentimentScore: sentiment.score,
       sourceUrl: url,
       claim: content.title,
@@ -210,7 +210,7 @@ const legalRiskLevel =
      * EXPLANATION
      * -------------------------
      */
-    const explanation = explanationGenerator.generateExplanation({
+ const explanation = await explanationGenerator.generateExplanation({
       title: content.title,
       excerpt: content.excerpt,
       aiDetection,
