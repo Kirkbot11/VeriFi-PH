@@ -25,10 +25,15 @@ function matchLaws(text = "", credibilityScore = 100) {
   }
 
   /**
+   * 🔥 NEW RULE:
+   * If credibility is low (<40), allow broader law triggering
+   */
+  const lowCredibilityMode = credibilityScore < 40;
+
+  /**
    * -------------------------
    * SCORE-AWARE LAW FILTERING
    * -------------------------
-   * Only allow stronger laws if credibility is low but not zero
    */
   const allowedRiskLevels =
     credibilityScore < 40
@@ -60,7 +65,9 @@ function matchLaws(text = "", credibilityScore = 100) {
    */
   const sortedMatches = scoredLaws
     .filter((l) =>
-      l.matchCount > 0 &&
+      (
+        l.matchCount > 0 || lowCredibilityMode
+      ) &&
       allowedRiskLevels.includes(l.risk_level)
     )
     .sort((a, b) => b.matchCount - a.matchCount)
@@ -73,7 +80,6 @@ function matchLaws(text = "", credibilityScore = 100) {
 
   /**
    * ❌ NO FALLBACK LAW
-   * (prevents fake legal warnings like SIM Registration Act on clean URLs)
    */
   if (sortedMatches.length === 0) {
     return [];
