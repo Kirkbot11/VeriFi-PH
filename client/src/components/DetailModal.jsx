@@ -68,9 +68,11 @@ function DetailModal({ post, onClose }) {
             </p>
           </section>
 
-         <span className={`px-3 py-1 rounded-full border font-semibold ${getRiskColor(riskLevel)}`}>
-  Risk Level: {riskLevel}
-</span>
+  <LegalInsight
+  law={post.law}
+  explanation={post.lawExplanation}
+  riskLevel={post.riskLevel}
+/>
 
           <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <h3 className="font-display text-base font-semibold text-slate-900">Analysis</h3>

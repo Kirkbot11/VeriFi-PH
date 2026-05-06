@@ -13,9 +13,9 @@ function LegalInsight({ law, explanation, riskLevel }) {
       </h3>
       <p className="mt-2 text-sm font-semibold text-slate-800">{law}</p>
       <p className="mt-1 text-sm text-slate-600">{explanation}</p>
-      <span className={`mt-3 inline-flex rounded-lg border px-3 py-1 text-xs font-semibold ${riskTone}`}>
-        Risk Level: {riskLevel}
-      </span>
+      <span className={`inline-block mt-2 px-3 py-1 rounded-full border text-xs font-bold uppercase ${getRiskColor(riskLevel)}`}>
+  {riskLevel} risk
+</span>
     </div>
   );
 }
