@@ -1,5 +1,3 @@
-import FlagBadge from './FlagBadge';
-
 function formatSignalValue(value) {
   if (value === null || value === undefined) return 'N/A';
   const numeric = Number(value);
@@ -7,14 +5,43 @@ function formatSignalValue(value) {
   return `${Math.round(numeric * 100)}%`;
 }
 
+function getCredibilityBand(score) {
+  if (score <= 70) {
+    return {
+      label: 'Low Credibility',
+      textClass: 'text-red-700',
+      bgClass: 'bg-red-100',
+      borderClass: 'border-red-200',
+      ringColor: '#ef4444',
+    };
+  }
+
+  if (score <= 90) {
+    return {
+      label: 'Moderate Credibility',
+      textClass: 'text-amber-700',
+      bgClass: 'bg-amber-100',
+      borderClass: 'border-amber-200',
+      ringColor: '#f59e0b',
+    };
+  }
+
+  return {
+    label: 'High Credibility',
+    textClass: 'text-emerald-700',
+    bgClass: 'bg-emerald-100',
+    borderClass: 'border-emerald-200',
+    ringColor: '#22c55e',
+  };
+}
+
 function PostCard({ post, onPostClick }) {
   const legitimacy = Number(post.legitimacyScore ?? post.credibilityScore ?? 0);
   const score = Math.max(0, Math.min(100, Number(post.credibilityScore ?? 0)));
   const breakdown = post.credibilityBreakdown || post.analysis?.credibility_breakdown || null;
-  const safeTone = score >= 60;
-  const ringColor = score <= 70 ? '#ef4444' : score <= 90 ? '#f59e0b' : '#22c55e';
+  const credibilityBand = getCredibilityBand(score);
   const ringStyle = {
-    background: `conic-gradient(${ringColor} ${score * 3.6}deg, #d1d5db 0deg)`,
+    background: `conic-gradient(${credibilityBand.ringColor} ${score * 3.6}deg, #d1d5db 0deg)`,
   };
 
   const signalItems = breakdown
@@ -82,17 +109,11 @@ function PostCard({ post, onPostClick }) {
                 <p className="text-xs uppercase tracking-wide text-slate-500">Verdict</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">{post.reason}</p>
               </div>
-              {post.isFlagged ? (
-                <FlagBadge />
-              ) : (
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    safeTone ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                  }`}
-                >
-                  {safeTone ? 'High Credibility' : 'Moderate Credibility'}
-                </span>
-              )}
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${credibilityBand.bgClass} ${credibilityBand.textClass} ${credibilityBand.borderClass}`}
+              >
+                {credibilityBand.label}
+              </span>
             </div>
           </div>
 
