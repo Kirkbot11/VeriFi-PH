@@ -132,7 +132,7 @@ async function analyzeUrl(req, res) {
       await mediaAIDetector.detectAIGeneratedContent({
         sourceUrl: url,
         content,
-        aiTextProbability: Number(aiDetection?.overall_probability || 0)
+        aiTextProbability: Number(aiDetection?.overall_probability || 15)
       });
 
     /**
