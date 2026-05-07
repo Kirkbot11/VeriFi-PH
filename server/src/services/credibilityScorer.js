@@ -161,8 +161,8 @@ function calculateSourceReputation(urlValue) {
  * -------------------------
  */
 function getVerdict(score) {
-  if (score < 25) return "Misleading";
-  if (score < 55) return "Questionable";
+  if (score < 40) return "Misleading";
+  if (score < 70) return "Questionable";
   return "Likely credible";
 }
 

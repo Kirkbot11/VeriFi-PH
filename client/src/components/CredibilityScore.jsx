@@ -1,8 +1,8 @@
 function CredibilityScore({ score, reason }) {
   const scoreTone =
-    score <= 70
+    score <= 39
       ? 'text-red-700 bg-red-100 border-red-200'
-      : score <= 90
+      : score <= 69
         ? 'text-amber-700 bg-amber-100 border-amber-200'
         : 'text-emerald-700 bg-emerald-100 border-emerald-200';
 

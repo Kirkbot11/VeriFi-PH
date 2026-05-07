@@ -6,7 +6,7 @@ function formatSignalValue(value) {
 }
 
 function getCredibilityBand(score) {
-  if (score <= 70) {
+  if (score <= 39) {
     return {
       label: 'Low Credibility',
       textClass: 'text-red-700',
@@ -16,7 +16,7 @@ function getCredibilityBand(score) {
     };
   }
 
-  if (score <= 90) {
+  if (score <= 69) {
     return {
       label: 'Moderate Credibility',
       textClass: 'text-amber-700',
@@ -40,6 +40,7 @@ function PostCard({ post, onPostClick }) {
   const score = Math.max(0, Math.min(100, Number(post.credibilityScore ?? 0)));
   const breakdown = post.credibilityBreakdown || post.analysis?.credibility_breakdown || null;
   const credibilityBand = getCredibilityBand(score);
+  const isLowCredibility = score < 40;
   const ringStyle = {
     background: `conic-gradient(${credibilityBand.ringColor} ${score * 3.6}deg, #d1d5db 0deg)`,
   };
@@ -146,7 +147,9 @@ function PostCard({ post, onPostClick }) {
             ) : null}
 
             <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-300 pt-3">
-              <span className="text-sm font-semibold text-slate-800">Credibility: {score}/100</span>
+              <span className="text-sm font-semibold text-slate-800">
+                Credibility: {score}/100 {isLowCredibility ? '(Low)' : score <= 69 ? '(Moderate)' : '(High)'}
+              </span>
             </div>
           </div>
         </section>
