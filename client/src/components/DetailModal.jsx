@@ -110,6 +110,13 @@ function DetailModal({ post, onClose }) {
               ))}
             </div>
           </section>
+
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <h3 className="font-display text-base font-semibold text-amber-900">Important Note</h3>
+            <p className="mt-2 text-sm leading-relaxed text-amber-900">
+              VeriFi-PH provides risk signals, not absolute truth. Results may be incorrect or incomplete. Always verify with trusted sources before sharing.
+            </p>
+          </section>
         </div>
       </div>
     </div>
