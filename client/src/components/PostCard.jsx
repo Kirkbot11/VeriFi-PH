@@ -93,7 +93,7 @@ function PostCard({ post, onPostClick }) {
         <section>
           <header className="mb-4 flex items-center gap-3">
             <div>
-              <p className="font-display text-3xl font-bold leading-none text-slate-900">VeriFI</p>
+              <p className="font-display text-3xl font-bold leading-none text-slate-900">VeriFi-PH</p>
               <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
                 {post.platform?.toUpperCase() || 'Source'}
               </p>
