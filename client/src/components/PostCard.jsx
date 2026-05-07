@@ -12,7 +12,7 @@ function PostCard({ post, onPostClick }) {
   const score = Math.max(0, Math.min(100, Number(post.credibilityScore ?? 0)));
   const breakdown = post.credibilityBreakdown || post.analysis?.credibility_breakdown || null;
   const safeTone = score >= 60;
-  const ringColor = score >= 60 ? '#06b6d4' : score >= 40 ? '#f59e0b' : '#ef4444';
+  const ringColor = score <= 70 ? '#ef4444' : score <= 90 ? '#f59e0b' : '#22c55e';
   const ringStyle = {
     background: `conic-gradient(${ringColor} ${score * 3.6}deg, #d1d5db 0deg)`,
   };
