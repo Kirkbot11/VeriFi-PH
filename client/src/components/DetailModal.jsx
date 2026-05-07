@@ -11,6 +11,18 @@ function highlightPhrase(text, phrase) {
 function DetailModal({ post, onClose }) {
   if (!post) return null;
 
+  const breakdown = post.credibilityBreakdown || post.analysis?.credibility_breakdown || null;
+
+  const breakdownRows = breakdown
+    ? [
+        { label: 'Source trust', value: breakdown.source },
+        { label: 'Content alignment', value: breakdown.content },
+        { label: 'Fact-check support', value: breakdown.fact_check?.score, detail: breakdown.fact_check?.verdict },
+        { label: 'Tone / sentiment', value: breakdown.sentiment },
+        { label: 'AI resistance', value: breakdown.ai },
+      ]
+    : [];
+
   const paragraphs = (post.explanation || post.content || '')
     .split(/\n\n|\.|\n/)
     .map(p => p.trim())
@@ -64,6 +76,25 @@ function DetailModal({ post, onClose }) {
               Verdict: <span className="font-semibold text-slate-900">{post.factCheck}</span>
             </p>
           </section>
+
+          {breakdownRows.length ? (
+            <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="font-display text-base font-semibold text-slate-900">Score Breakdown</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {breakdownRows.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{item.label}</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      {typeof item.value === 'number' ? `${Math.round(item.value * 100)}%` : 'N/A'}
+                    </p>
+                    {item.detail ? (
+                      <p className="mt-1 text-xs text-slate-600">{item.detail}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <LegalInsight
             law={post.law}

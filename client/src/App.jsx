@@ -1,25 +1,18 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import Feed from './components/Feed';
 import DetailModal from './components/DetailModal';
-import ShareWarningModal from './components/ShareWarningModal';
 import LivePostForm from './components/LivePostForm';
 import { io } from 'socket.io-client';
+
+const LOCAL_STORAGE_KEY = 'verifi-ph:recent-posts';
 
 function buildPostFromAnalysis(payload) {
   const credibilityScore = Number(payload?.credibility_score ?? 0);
   const sourceUrl = payload?.url || '';
+  const breakdown = payload?.credibility_breakdown || payload?.analysis?.breakdown || null;
   const aiProbabilityRaw = Number(
-    payload?.ai_multimodal_detection?.overall_probability ??
     payload?.ai_detection?.overall_probability ??
     0
-  );
-
-  const aiProbability =
-    aiProbabilityRaw > 1 ? aiProbabilityRaw / 100 : aiProbabilityRaw;
-
-  const authenticityScore = Math.max(
-    0,
-    Math.min(100, Math.round((1 - aiProbability) * 100))
   );
 
   return {
@@ -37,7 +30,6 @@ function buildPostFromAnalysis(payload) {
     sourceUrl,
     credibilityScore,
     legitimacyScore: credibilityScore,
-    authenticityScore,
     isFlagged: credibilityScore < 40,
     reason:
       payload?.verdict ||
@@ -60,7 +52,9 @@ function buildPostFromAnalysis(payload) {
     riskLevel: payload?.legal_risk_level || 'low',
     explanation: payload?.explanation || 'No analysis explanation available.',
     fetchWarning: payload?.fetch_warning || null,
-    aiDetectionBreakdown: payload?.ai_multimodal_detection || null,
+  aiDetectionBreakdown: payload?.ai_detection || null,
+  credibilityBreakdown: breakdown,
+  cacheHit: Boolean(payload?.cache_hit),
 
     // 🔥 FIX: store full backend response
     analysis: payload,
@@ -79,7 +73,6 @@ function App() {
   const [posts, setPosts] = useState([]);
   const socketRef = useRef(null);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [shareWarningPost, setShareWarningPost] = useState(null);
   const [statusText, setStatusText] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -89,10 +82,37 @@ function App() {
   );
 
   useEffect(() => {
-    if (!statusText) return undefined;
+    try {
+      const cachedPosts = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (cachedPosts) {
+        const parsedPosts = JSON.parse(cachedPosts);
+        if (Array.isArray(parsedPosts)) {
+          setPosts(parsedPosts.slice(0, 100));
+        }
+      }
+    } catch {
+      // Ignore storage corruption and continue with live data.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (!statusText) return undefined;
+    } catch {
+      return undefined;
+    }
+
     const timeout = setTimeout(() => setStatusText(''), 2500);
     return () => clearTimeout(timeout);
   }, [statusText]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(posts.slice(0, 100)));
+    } catch {
+      // Ignore storage quota failures.
+    }
+  }, [posts]);
 
   useEffect(() => {
     const backendUrl =
@@ -147,6 +167,8 @@ const backendUrl =
         'Link verified successfully. Analysis has been added to the feed.'
       );
 
+      setSelectedPost(newPost);
+
       return { ok: true, post: newPost };
     } catch (err) {
       const isNetworkError =
@@ -170,27 +192,6 @@ const message = isNetworkError
     setSelectedPost(post);
   };
 
-  const completeShare = (post) => {
-    console.log('Shared', { postId: post.id, user: post.user });
-    setStatusText(`Post from ${post.user} was shared.`);
-  };
-
-  const handleShareClick = (post) => {
-    if (post.isFlagged) {
-      setShareWarningPost(post);
-      return;
-    }
-
-    completeShare(post);
-  };
-
-  const handleShareAnyway = () => {
-    if (!shareWarningPost) return;
-
-    completeShare(shareWarningPost);
-    setShareWarningPost(null);
-  };
-
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-6 sm:px-6 sm:py-10">
       <section className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-r from-sky-200/85 via-cyan-50/90 to-emerald-100/85 p-6 shadow-card backdrop-blur md:p-8">
@@ -208,7 +209,7 @@ const message = isNetworkError
         <p className="mt-3 max-w-2xl text-sm text-slate-700 sm:text-base">
           Paste a public post URL from social media and get an instant
           credibility assessment with fact-check hints, legal context, and
-          share warnings.
+          a score breakdown you can actually inspect.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-3 text-xs sm:text-sm">
@@ -218,10 +219,6 @@ const message = isNetworkError
 
           <span className="rounded-full border border-red-600/25 bg-red-100 px-3 py-1 font-medium text-red-700">
             Flagged Posts: {flaggedCount}
-          </span>
-
-          <span className="rounded-full border border-sky-700/20 bg-sky-100 px-3 py-1 font-medium text-sky-800">
-            Think Before You Share
           </span>
         </div>
       </section>
@@ -237,18 +234,11 @@ const message = isNetworkError
       <Feed
         posts={posts}
         onPostClick={handlePostClick}
-        onShareClick={handleShareClick}
       />
 
       <DetailModal
         post={selectedPost}
         onClose={() => setSelectedPost(null)}
-      />
-
-      <ShareWarningModal
-        post={shareWarningPost}
-        onClose={() => setShareWarningPost(null)}
-        onShareAnyway={handleShareAnyway}
       />
     </main>
   );

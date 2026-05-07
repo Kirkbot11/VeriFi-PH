@@ -1,6 +1,6 @@
 import PostCard from './PostCard';
 
-function Feed({ posts, onPostClick, onShareClick }) {
+function Feed({ posts, onPostClick }) {
   if (!posts.length) {
     return (
       <section className="mt-6 rounded-2xl border border-white/20 bg-white/90 p-6 text-center shadow-card sm:mt-8">
@@ -23,7 +23,6 @@ function Feed({ posts, onPostClick, onShareClick }) {
           <PostCard
             post={post}
             onPostClick={onPostClick}
-            onShareClick={onShareClick}
           />
         </div>
       ))}

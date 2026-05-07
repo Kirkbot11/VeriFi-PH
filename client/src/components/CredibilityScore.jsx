@@ -17,6 +17,9 @@ function CredibilityScore({ score, reason }) {
         </span>
         <p className="text-sm text-slate-600">{reason}</p>
       </div>
+      <p className="mt-2 text-xs text-slate-500">
+        The detailed signal breakdown is shown below so the score can be audited, not just accepted.
+      </p>
     </div>
   );
 }

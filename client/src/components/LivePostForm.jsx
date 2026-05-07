@@ -47,6 +47,10 @@ function LivePostForm({ onVerifyLink, isVerifying }) {
         </button>
       </form>
 
+      <p className="mt-3 text-xs text-slate-500">
+        Each analysis is saved locally in your browser so you can revisit recent results after refresh.
+      </p>
+
       {error ? (
         <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
