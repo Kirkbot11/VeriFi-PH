@@ -64,7 +64,7 @@ function PostCard({ post, onPostClick }) {
           : 'border-slate-300 hover:border-slate-400',
       ].join(' ')}
     >
-      <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr] md:items-stretch">
         <section>
           <header className="mb-4 flex items-center gap-3">
             <span className="h-10 w-10 rounded-full bg-cyan-500" />
@@ -103,7 +103,7 @@ function PostCard({ post, onPostClick }) {
           ) : null}
         </section>
 
-        <section className="flex flex-col gap-4">
+        <section className="flex h-full flex-col gap-4">
           <div className="min-h-24 rounded-3xl border-2 border-slate-300 bg-slate-100 p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -118,9 +118,9 @@ function PostCard({ post, onPostClick }) {
             </div>
           </div>
 
-          <div className="min-h-48 rounded-3xl border-2 border-slate-300 bg-slate-100 p-4">
+          <div className="flex min-h-48 flex-1 flex-col rounded-3xl border-2 border-slate-300 bg-slate-100 p-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">Analysis Summary</p>
-            <p className="mt-2 line-clamp-6 text-sm leading-relaxed text-slate-700">{post.content}</p>
+            <p className="mt-2 line-clamp-6 flex-1 text-sm leading-relaxed text-slate-700">{post.content}</p>
 
             {post.fetchWarning ? (
               <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
@@ -146,7 +146,7 @@ function PostCard({ post, onPostClick }) {
               </p>
             ) : null}
 
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-300 pt-3">
+            <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-300 pt-3">
               <span className="text-sm font-semibold text-slate-800">
                 Credibility: {score}/100 {isLowCredibility ? '(Low)' : score <= 69 ? '(Moderate)' : '(High)'}
               </span>
