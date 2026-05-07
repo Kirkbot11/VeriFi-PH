@@ -104,8 +104,8 @@ function PostCard({ post, onPostClick }) {
         </section>
 
         <section className="flex h-full flex-col gap-4">
-          <div className="min-h-24 rounded-3xl border-2 border-slate-300 bg-slate-100 p-4">
-            <div className="flex items-start justify-between gap-2">
+          <div className="min-h-24 rounded-3xl border-2 border-slate-300 bg-slate-100 p-4 flex items-center">
+            <div className="flex w-full items-center justify-between gap-2">
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">Verdict</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">{post.reason}</p>
@@ -139,18 +139,6 @@ function PostCard({ post, onPostClick }) {
                 Open source post
               </a>
             ) : null}
-
-            {post.cacheHit ? (
-              <p className="mt-3 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-sky-800">
-                Cached analysis loaded instantly.
-              </p>
-            ) : null}
-
-            <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-300 pt-3">
-              <span className="text-sm font-semibold text-slate-800">
-                Credibility: {score}/100 {isLowCredibility ? '(Low)' : score <= 69 ? '(Moderate)' : '(High)'}
-              </span>
-            </div>
           </div>
         </section>
       </div>
