@@ -1,3 +1,5 @@
+import verifiEyeLogo from '../assets/verifi-eye-logo.svg';
+
 function formatSignalValue(value) {
   if (value === null || value === undefined) return 'N/A';
   const numeric = Number(value);
@@ -77,8 +79,14 @@ function PostCard({ post, onPostClick }) {
           </header>
 
           <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-full p-4" style={ringStyle}>
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-[#f5f5f0] text-5xl font-bold text-slate-900">
-              {score}%
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-[#f5f5f0]">
+              <img
+                src={verifiEyeLogo}
+                alt="VeriFI logo"
+                className="h-20 w-20 object-contain"
+                loading="lazy"
+              />
+              <p className="mt-2 text-3xl font-bold text-slate-900">{score}%</p>
             </div>
           </div>
 
