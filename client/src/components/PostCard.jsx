@@ -5,6 +5,29 @@ function formatSignalValue(value) {
   return `${Math.round(numeric * 100)}%`;
 }
 
+function formatReadableSections(text, maxItems = 5) {
+  if (!text) return [];
+
+  const cleaned = String(text).replace(/\s+/g, ' ').trim();
+  const rawSentences = cleaned.split(/(?<=[.!?])\s+/).filter(Boolean);
+
+  return rawSentences.slice(0, maxItems).map((sentence) => {
+    const matched = sentence.match(/^([A-Za-z][A-Za-z\s-]{2,32}):\s*(.+)$/);
+
+    if (matched) {
+      return {
+        label: matched[1].trim(),
+        text: matched[2].trim(),
+      };
+    }
+
+    return {
+      label: null,
+      text: sentence.trim(),
+    };
+  });
+}
+
 function getCredibilityBand(score) {
   if (score <= 39) {
     return {
@@ -53,6 +76,8 @@ function PostCard({ post, onPostClick }) {
         { label: 'Sentiment', value: breakdown.sentiment },
       ]
     : [];
+
+  const summarySections = formatReadableSections(post.content, 6);
 
   return (
     <article
@@ -119,24 +144,20 @@ function PostCard({ post, onPostClick }) {
 
           <div className="flex min-h-48 flex-1 flex-col rounded-3xl border-2 border-slate-300 bg-slate-100 p-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">Analysis Summary</p>
-            <p className="mt-2 line-clamp-6 flex-1 text-sm leading-relaxed text-slate-700">{post.content}</p>
+
+            <div className="mt-3 flex-1 space-y-2.5 text-sm leading-6 text-slate-800">
+              {(summarySections.length ? summarySections : [{ label: null, text: post.content }]).map((section, index) => (
+                <p key={`${section.label || 'section'}-${index}`}>
+                  {section.label ? <span className="font-semibold text-slate-900">{section.label}: </span> : null}
+                  {section.text}
+                </p>
+              ))}
+            </div>
 
             {post.fetchWarning ? (
               <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
                 {post.fetchWarning}
               </p>
-            ) : null}
-
-            {post.sourceUrl ? (
-              <a
-                href={post.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(event) => event.stopPropagation()}
-                className="mt-3 inline-block text-xs font-semibold text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-800"
-              >
-                Open source post
-              </a>
             ) : null}
           </div>
         </section>

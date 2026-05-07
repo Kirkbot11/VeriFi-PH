@@ -1,11 +1,27 @@
 import CredibilityScore from './CredibilityScore';
 import LegalInsight from './LegalInsight';
 
-function highlightPhrase(text, phrase) {
-  if (!phrase) return text;
-  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`(${escaped})`, 'gi');
-  return text.split(regex);
+function formatReadableSections(text, maxItems = 8) {
+  if (!text) return [];
+
+  const cleaned = String(text).replace(/\s+/g, ' ').trim();
+  const rawSentences = cleaned.split(/(?<=[.!?])\s+/).filter(Boolean);
+
+  return rawSentences.slice(0, maxItems).map((sentence) => {
+    const matched = sentence.match(/^([A-Za-z][A-Za-z\s-]{2,32}):\s*(.+)$/);
+
+    if (matched) {
+      return {
+        label: matched[1].trim(),
+        text: matched[2].trim(),
+      };
+    }
+
+    return {
+      label: null,
+      text: sentence.trim(),
+    };
+  });
 }
 
 function DetailModal({ post, onClose }) {
@@ -23,10 +39,8 @@ function DetailModal({ post, onClose }) {
       ]
     : [];
 
-  const paragraphs = (post.explanation || post.content || '')
-    .split(/\n\n|\.|\n/)
-    .map(p => p.trim())
-    .filter(Boolean);
+  const summarySections = formatReadableSections(post.content || post.explanation || '', 6);
+  const analysisSections = formatReadableSections(post.explanation || post.content || '', 10);
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
@@ -67,7 +81,14 @@ function DetailModal({ post, onClose }) {
 
           <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <h3 className="font-display text-base font-semibold text-slate-900">Summary</h3>
-            <p className="mt-2 text-sm text-slate-700">{post.content}</p>
+            <div className="mt-3 space-y-2.5 text-sm leading-6 text-slate-800">
+              {(summarySections.length ? summarySections : [{ label: null, text: post.content }]).map((section, index) => (
+                <p key={`${section.label || 'summary'}-${index}`}>
+                  {section.label ? <span className="font-semibold text-slate-900">{section.label}: </span> : null}
+                  {section.text}
+                </p>
+              ))}
+            </div>
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -104,9 +125,12 @@ function DetailModal({ post, onClose }) {
 
           <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <h3 className="font-display text-base font-semibold text-slate-900">Analysis</h3>
-            <div className="mt-2 text-sm text-slate-700 space-y-2">
-              {paragraphs.map((p, i) => (
-                <p key={i}>{p}</p>
+            <div className="mt-3 space-y-2.5 text-sm leading-6 text-slate-800">
+              {(analysisSections.length ? analysisSections : [{ label: null, text: post.explanation || post.content }]).map((section, index) => (
+                <p key={`${section.label || 'analysis'}-${index}`}>
+                  {section.label ? <span className="font-semibold text-slate-900">{section.label}: </span> : null}
+                  {section.text}
+                </p>
               ))}
             </div>
           </section>
