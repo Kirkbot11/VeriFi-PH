@@ -9,7 +9,7 @@ function CredibilityScore({ score, reason }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h3 className="font-display text-base font-semibold text-slate-900">
-        📊 Credibility Score
+        Credibility Score
       </h3>
       <div className="mt-3 flex items-center gap-3">
         <span className={`rounded-lg border px-3 py-1 text-sm font-bold ${scoreTone}`}>
@@ -18,7 +18,7 @@ function CredibilityScore({ score, reason }) {
         <p className="text-sm text-slate-600">{reason}</p>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        The detailed signal breakdown is shown below so the score can be audited, not just accepted.
+        The detailed score breakdown is shown below so the score can be audited, not just accepted.
       </p>
     </div>
   );

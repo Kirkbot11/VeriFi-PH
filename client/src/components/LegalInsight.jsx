@@ -25,7 +25,7 @@ function LegalInsight({ law, explanation, riskLevel }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h3 className="font-display text-base font-semibold text-slate-900">
-        ⚖ Legal Insight
+        Legal Insight
       </h3>
 
       <p className="mt-2 text-sm font-semibold text-slate-800">{law}</p>

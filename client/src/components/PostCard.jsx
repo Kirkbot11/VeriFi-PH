@@ -62,7 +62,7 @@ function PostCard({ post, onPostClick }) {
 
           {signalItems.length ? (
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white/80 p-3">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Signal Breakdown</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Score Breakdown</p>
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
                 {signalItems.map((item) => (
                   <div key={item.label} className="rounded-xl bg-slate-100 px-2 py-2">
